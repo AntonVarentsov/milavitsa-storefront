@@ -49,8 +49,12 @@ export const listProducts = async ({
     ...(await getAuthHeaders()),
   }
 
+  const userCacheOptions = await getCacheOptions("products")
   const next = {
-    ...(await getCacheOptions("products")),
+    tags: [
+      "products",
+      ...("tags" in userCacheOptions ? userCacheOptions.tags : []),
+    ],
   }
 
   return sdk.client
@@ -83,6 +87,14 @@ export const listProducts = async ({
         queryParams,
       }
     })
+}
+
+export const getProductSeoByHandle = async (handle: string) => {
+  return sdk.client
+    .fetch<{ seo: Record<string, string | boolean | null> | null }>(
+      `/store/products/seo?handle=${encodeURIComponent(handle)}`
+    )
+    .catch(() => ({ seo: null }))
 }
 
 /**

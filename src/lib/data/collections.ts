@@ -57,3 +57,11 @@ export const getCollectionByHandle = async (
     })
     .then(({ collections }) => collections[0])
 }
+
+export const getCollectionSeoByHandle = async (handle: string) => {
+  return sdk.client
+    .fetch<{ seo: Record<string, string | boolean | null> | null }>(
+      `/store/collections/seo?handle=${encodeURIComponent(handle)}`
+    )
+    .catch(() => ({ seo: null }))
+}

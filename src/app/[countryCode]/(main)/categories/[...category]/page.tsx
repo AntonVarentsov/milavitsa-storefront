@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { getCategoryByHandle, listCategories } from "@lib/data/categories"
+import { getCategoryByHandle, listCategories, getCategorySeoByHandle } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
@@ -44,18 +44,44 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://milavitsa.store"
+  const categoryHandle = params.category.join("/")
+
   try {
-    const productCategory = await getCategoryByHandle(params.category)
+    const [productCategory, { seo }] = await Promise.all([
+      getCategoryByHandle(params.category),
+      getCategorySeoByHandle(categoryHandle),
+    ])
 
-    const title = productCategory.name + " | Medusa Store"
-
-    const description = productCategory.description ?? `${title} category.`
+    const canonical =
+      (seo?.canonical_url as string) ||
+      `${baseUrl}/${params.countryCode}/categories/${categoryHandle}`
 
     return {
-      title: `${title} | Medusa Store`,
-      description,
-      alternates: {
-        canonical: `${params.category.join("/")}`,
+      title:
+        (seo?.seo_title as string) ||
+        `${productCategory.name} | Милавица`,
+      description:
+        (seo?.seo_description as string) ||
+        productCategory.description ||
+        `${productCategory.name} категория`,
+      keywords: (seo?.seo_keywords as string) || undefined,
+      robots: seo?.no_index
+        ? "noindex,nofollow"
+        : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      alternates: { canonical },
+      openGraph: {
+        title:
+          (seo?.og_title as string) || productCategory.name,
+        description:
+          (seo?.og_description as string) ||
+          productCategory.description ||
+          productCategory.name,
+        url: canonical,
+        type: "website",
+        images: seo?.og_image
+          ? [{ url: seo.og_image as string }]
+          : [],
       },
     }
   } catch (error) {

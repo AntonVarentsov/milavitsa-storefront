@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { getCollectionByHandle, listCollections } from "@lib/data/collections"
+import { getCollectionByHandle, listCollections, getCollectionSeoByHandle } from "@lib/data/collections"
 import { listRegions } from "@lib/data/regions"
 import { StoreCollection, StoreRegion } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
@@ -52,18 +52,45 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  const collection = await getCollectionByHandle(params.handle)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://milavitsa.store"
+
+  const [collection, { seo }] = await Promise.all([
+    getCollectionByHandle(params.handle),
+    getCollectionSeoByHandle(params.handle),
+  ])
 
   if (!collection) {
     notFound()
   }
 
-  const metadata = {
-    title: `${collection.title} | Medusa Store`,
-    description: `${collection.title} collection`,
-  } as Metadata
+  const canonical =
+    (seo?.canonical_url as string) ||
+    `${baseUrl}/${params.countryCode}/collections/${params.handle}`
 
-  return metadata
+  return {
+    title: (seo?.seo_title as string) || `${collection.title} | Милавица`,
+    description:
+      (seo?.seo_description as string) ||
+      collection.description ||
+      `${collection.title} коллекция`,
+    keywords: (seo?.seo_keywords as string) || undefined,
+    robots: seo?.no_index
+      ? "noindex,nofollow"
+      : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+    alternates: { canonical },
+    openGraph: {
+      title: (seo?.og_title as string) || collection.title,
+      description:
+        (seo?.og_description as string) ||
+        collection.description ||
+        collection.title,
+      url: canonical,
+      type: "website",
+      images: seo?.og_image
+        ? [{ url: seo.og_image as string }]
+        : [],
+    },
+  } as Metadata
 }
 
 export default async function CollectionPage(props: Props) {

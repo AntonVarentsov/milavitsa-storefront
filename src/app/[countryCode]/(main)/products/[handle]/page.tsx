@@ -1,7 +1,8 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { listProducts } from "@lib/data/products"
+import { listProducts, getProductSeoByHandle } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
+import { getCategoryPath } from "@lib/data/categories"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
 
@@ -71,29 +72,64 @@ function getImagesForVariant(
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  const { handle } = params
-  const region = await getRegion(params.countryCode)
+  const { handle, countryCode } = params
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://milavitsa.store"
+
+  const region = await getRegion(countryCode)
 
   if (!region) {
     notFound()
   }
 
-  const product = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle },
-  }).then(({ response }) => response.products[0])
+  const [{ response }, { seo }] = await Promise.all([
+    listProducts({
+      countryCode,
+      queryParams: { handle },
+    }),
+    getProductSeoByHandle(handle),
+  ])
+
+  const product = response.products[0]
 
   if (!product) {
     notFound()
   }
 
+  let canonical = (seo?.canonical_url as string) || undefined
+  if (!canonical && seo?.main_category_id) {
+    const categoryPath = await getCategoryPath(seo.main_category_id as string)
+    canonical = categoryPath
+      ? `${baseUrl}/${countryCode}/categories/${categoryPath}/products/${handle}`
+      : `${baseUrl}/${countryCode}/products/${handle}`
+  }
+  if (!canonical) {
+    canonical = `${baseUrl}/${countryCode}/products/${handle}`
+  }
+
   return {
-    title: `${product.title} | Medusa Store`,
-    description: `${product.title}`,
+    title: (seo?.seo_title as string) || `${product.title} | Милавица`,
+    description:
+      (seo?.seo_description as string) ||
+      product.description ||
+      product.title,
+    keywords: (seo?.seo_keywords as string) || undefined,
+    robots: seo?.no_index
+      ? "noindex,nofollow"
+      : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+    alternates: { canonical },
     openGraph: {
-      title: `${product.title} | Medusa Store`,
-      description: `${product.title}`,
-      images: product.thumbnail ? [product.thumbnail] : [],
+      title: (seo?.og_title as string) || product.title,
+      description:
+        (seo?.og_description as string) ||
+        product.description ||
+        product.title,
+      url: canonical,
+      type: "website",
+      images: seo?.og_image
+        ? [{ url: seo.og_image as string }]
+        : product.thumbnail
+          ? [{ url: product.thumbnail }]
+          : [],
     },
   }
 }
