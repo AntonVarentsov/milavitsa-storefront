@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-
-import InteractiveLink from "@modules/common/components/interactive-link"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
+import { ChevronRight } from "lucide-react"
 
 export default function CategoryTemplate({
   category,
@@ -26,71 +25,89 @@ export default function CategoryTemplate({
   if (!category || !countryCode) notFound()
 
   const parents = [] as HttpTypes.StoreProductCategory[]
-
-  const getParents = (category: HttpTypes.StoreProductCategory) => {
-    if (category.parent_category) {
-      parents.push(category.parent_category)
-      getParents(category.parent_category)
+  const getParents = (cat: HttpTypes.StoreProductCategory) => {
+    if (cat.parent_category) {
+      parents.push(cat.parent_category)
+      getParents(cat.parent_category)
     }
   }
-
   getParents(category)
 
+  const totalProducts = category.products?.length ?? 0
+
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList sortBy={sort} data-testid="sort-by-container" />
-      <div className="w-full">
-        <div className="flex flex-row mb-8 text-2xl-semi gap-4">
-          {parents &&
-            parents.map((parent) => (
-              <span key={parent.id} className="text-ui-fg-subtle">
-                <LocalizedClientLink
-                  className="mr-4 hover:text-black"
-                  href={`/categories/${parent.handle}`}
-                  data-testid="sort-by-link"
-                >
-                  {parent.name}
-                </LocalizedClientLink>
-                /
-              </span>
-            ))}
-          <h1 data-testid="category-page-title">{category.name}</h1>
+    <div className="content-container py-10" data-testid="category-container">
+      {/* Breadcrumbs */}
+      {parents.length > 0 && (
+        <nav className="flex items-center gap-1 mb-4 text-2xs text-ink-50">
+          <LocalizedClientLink href="/" className="hover:text-brand-red transition-colors">
+            Главная
+          </LocalizedClientLink>
+          {parents.reverse().map((parent) => (
+            <span key={parent.id} className="flex items-center gap-1">
+              <ChevronRight size={10} />
+              <LocalizedClientLink
+                href={`/categories/${parent.handle}`}
+                className="hover:text-brand-red transition-colors"
+              >
+                {parent.name}
+              </LocalizedClientLink>
+            </span>
+          ))}
+          <ChevronRight size={10} />
+          <span className="text-ink">{category.name}</span>
+        </nav>
+      )}
+
+      {/* Заголовок */}
+      <div className="mb-8 flex items-baseline gap-3">
+        <h1 className="text-lg uppercase tracking-wide font-bold" data-testid="category-page-title">
+          {category.name}
+        </h1>
+        {totalProducts > 0 && (
+          <span className="text-sm text-ink-50">({totalProducts})</span>
+        )}
+      </div>
+
+      {/* Описание */}
+      {category.description && (
+        <p className="mb-6 text-sm text-ink-50 max-w-2xl">{category.description}</p>
+      )}
+
+      {/* Подкатегории */}
+      {category.category_children && category.category_children.length > 0 && (
+        <div className="mb-8 flex flex-wrap gap-2">
+          {category.category_children.map((c) => (
+            <LocalizedClientLink
+              key={c.id}
+              href={`/categories/${c.handle}`}
+              className="btn-secondary text-2xs py-1.5 px-4"
+            >
+              {c.name}
+            </LocalizedClientLink>
+          ))}
         </div>
-        {category.description && (
-          <div className="mb-8 text-base-regular">
-            <p>{category.description}</p>
-          </div>
-        )}
-        {category.category_children && (
-          <div className="mb-8 text-base-large">
-            <ul className="grid grid-cols-1 gap-2">
-              {category.category_children?.map((c) => (
-                <li key={c.id}>
-                  <InteractiveLink href={`/categories/${c.handle}`}>
-                    {c.name}
-                  </InteractiveLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <Suspense
-          fallback={
-            <SkeletonProductGrid
-              numberOfProducts={category.products?.length ?? 8}
+      )}
+
+      <div className="flex flex-col md:flex-row md:items-start gap-8">
+        {/* Фильтры */}
+        <div className="md:min-w-[220px]">
+          <RefinementList sortBy={sort} data-testid="sort-by-container" />
+        </div>
+
+        {/* Товары */}
+        <div className="flex-1">
+          <Suspense
+            fallback={<SkeletonProductGrid numberOfProducts={category.products?.length ?? 8} />}
+          >
+            <PaginatedProducts
+              sortBy={sort}
+              page={pageNumber}
+              categoryId={category.id}
+              countryCode={countryCode}
             />
-          }
-        >
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            categoryId={category.id}
-            countryCode={countryCode}
-          />
-        </Suspense>
+          </Suspense>
+        </div>
       </div>
     </div>
   )

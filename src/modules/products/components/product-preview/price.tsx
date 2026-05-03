@@ -1,29 +1,24 @@
-import { Text, clx } from "@medusajs/ui"
 import { VariantPrice } from "types/global"
 
-export default async function PreviewPrice({ price }: { price: VariantPrice }) {
-  if (!price) {
-    return null
-  }
+export default function PreviewPrice({ price }: { price: VariantPrice }) {
+  if (!price) return null
 
   return (
-    <>
+    <div className="flex items-center gap-1.5">
       {price.price_type === "sale" && (
-        <Text
-          className="line-through text-ui-fg-muted"
+        <span
+          className="text-2xs text-ink-50 line-through"
           data-testid="original-price"
         >
           {price.original_price}
-        </Text>
+        </span>
       )}
-      <Text
-        className={clx("text-ui-fg-muted", {
-          "text-ui-fg-interactive": price.price_type === "sale",
-        })}
+      <span
+        className={`text-2xs font-bold ${price.price_type === "sale" ? "text-feedback-error" : "text-ink"}`}
         data-testid="price"
       >
         {price.calculated_price}
-      </Text>
-    </>
+      </span>
+    </div>
   )
 }

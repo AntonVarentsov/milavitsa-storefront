@@ -1,12 +1,8 @@
-import { Container, clx } from "@medusajs/ui"
 import Image from "next/image"
 import React from "react"
 
-import PlaceholderImage from "@modules/common/icons/placeholder-image"
-
 type ThumbnailProps = {
   thumbnail?: string | null
-  // TODO: Fix image typings
   images?: any[] | null
   size?: "small" | "medium" | "large" | "full" | "square"
   isFeatured?: boolean
@@ -24,45 +20,45 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
 }) => {
   const initialImage = thumbnail || images?.[0]?.url
 
+  const sizeClasses = {
+    small: "w-[180px]",
+    medium: "w-[290px]",
+    large: "w-[440px]",
+    full: "w-full",
+    square: "w-full",
+  }
+
+  const aspectClass =
+    size === "square"
+      ? "aspect-square"
+      : isFeatured
+      ? "aspect-[2/3]"
+      : "aspect-[2/3]"
+
   return (
-    <Container
-      className={clx(
-        "relative w-full overflow-hidden p-4 bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
-        className,
-        {
-          "aspect-[11/14]": isFeatured,
-          "aspect-[9/16]": !isFeatured && size !== "square",
-          "aspect-[1/1]": size === "square",
-          "w-[180px]": size === "small",
-          "w-[290px]": size === "medium",
-          "w-[440px]": size === "large",
-          "w-full": size === "full",
-        }
-      )}
+    <div
+      className={`relative overflow-hidden bg-surface-silk ${aspectClass} ${sizeClasses[size]} ${className || ""}`}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
-    </Container>
-  )
-}
-
-const ImageOrPlaceholder = ({
-  image,
-  size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
-  return image ? (
-    <Image
-      src={image}
-      alt="Thumbnail"
-      className="absolute inset-0 object-cover object-center"
-      draggable={false}
-      quality={50}
-      sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-      fill
-    />
-  ) : (
-    <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-      <PlaceholderImage size={size === "small" ? 16 : 24} />
+      {initialImage ? (
+        <Image
+          src={initialImage}
+          alt="Изображение товара"
+          className="absolute inset-0 object-cover object-center"
+          draggable={false}
+          quality={60}
+          sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+          fill
+        />
+      ) : (
+        <div className="w-full h-full absolute inset-0 flex items-center justify-center">
+          <svg width={size === "small" ? 16 : 24} height={size === "small" ? 16 : 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-ink-25">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,11 +1,8 @@
 "use client"
 
-import Back from "@modules/common/icons/back"
-import FastDelivery from "@modules/common/icons/fast-delivery"
-import Refresh from "@modules/common/icons/refresh"
-
 import Accordion from "./accordion"
 import { HttpTypes } from "@medusajs/types"
+import { Truck, RefreshCw, RotateCcw, MapPin } from "lucide-react"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
@@ -14,17 +11,25 @@ type ProductTabsProps = {
 const ProductTabs = ({ product }: ProductTabsProps) => {
   const tabs = [
     {
-      label: "Product Information",
-      component: <ProductInfoTab product={product} />,
+      label: "Описание",
+      component: <DescriptionTab product={product} />,
     },
     {
-      label: "Shipping & Returns",
-      component: <ShippingInfoTab />,
+      label: "Состав и уход",
+      component: <MaterialTab product={product} />,
+    },
+    {
+      label: "Доставка и возврат",
+      component: <ShippingTab />,
+    },
+    {
+      label: "Наличие в магазинах",
+      component: <StoreAvailabilityTab />,
     },
   ]
 
   return (
-    <div className="w-full">
+    <div className="w-full border-t border-ink-20">
       <Accordion type="multiple">
         {tabs.map((tab, i) => (
           <Accordion.Item
@@ -41,81 +46,78 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Material</span>
-            <p>{product.material ? product.material : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Country of origin</span>
-            <p>{product.origin_country ? product.origin_country : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Type</span>
-            <p>{product.type ? product.type.value : "-"}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Weight</span>
-            <p>{product.weight ? `${product.weight} g` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Dimensions</span>
-            <p>
-              {product.length && product.width && product.height
-                ? `${product.length}L x ${product.width}W x ${product.height}H`
-                : "-"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+const DescriptionTab = ({ product }: ProductTabsProps) => (
+  <div className="py-4 text-sm text-ink leading-relaxed">
+    {product.description || "Описание отсутствует."}
+  </div>
+)
 
-const ShippingInfoTab = () => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-y-8">
-        <div className="flex items-start gap-x-2">
-          <FastDelivery />
-          <div>
-            <span className="font-semibold">Fast delivery</span>
-            <p className="max-w-sm">
-              Your package will arrive in 3-5 business days at your pick up
-              location or in the comfort of your home.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Refresh />
-          <div>
-            <span className="font-semibold">Simple exchanges</span>
-            <p className="max-w-sm">
-              Is the fit not quite right? No worries - we&apos;ll exchange your
-              product for a new one.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Back />
-          <div>
-            <span className="font-semibold">Easy returns</span>
-            <p className="max-w-sm">
-              Just return your product and we&apos;ll refund your money. No
-              questions asked – we&apos;ll do our best to make sure your return
-              is hassle-free.
-            </p>
-          </div>
+const MaterialTab = ({ product }: ProductTabsProps) => (
+  <div className="py-4 text-sm text-ink space-y-2">
+    {product.material && (
+      <div>
+        <span className="text-2xs uppercase tracking-wide font-bold text-ink-50 block mb-0.5">Состав</span>
+        <p>{product.material}</p>
+      </div>
+    )}
+    {product.origin_country && (
+      <div>
+        <span className="text-2xs uppercase tracking-wide font-bold text-ink-50 block mb-0.5">Страна производства</span>
+        <p>{product.origin_country}</p>
+      </div>
+    )}
+    {!product.material && !product.origin_country && (
+      <p className="text-ink-50">Информация не указана.</p>
+    )}
+    <div className="mt-3 text-xs text-ink-50">
+      <p>Рекомендуем стирку при 30°С в деликатном режиме.</p>
+      <p>Не отбеливать. Не сушить в машинке.</p>
+    </div>
+  </div>
+)
+
+const ShippingTab = () => (
+  <div className="py-4 flex flex-col gap-4">
+    {[
+      {
+        icon: <Truck size={16} strokeWidth={1.5} />,
+        title: "Доставка по России",
+        desc: "Курьером в Москве за 1–2 дня. СДЭК и Почта России — 3–7 дней. Бесплатно при заказе от 5 000 ₽.",
+      },
+      {
+        icon: <RefreshCw size={16} strokeWidth={1.5} />,
+        title: "Обмен",
+        desc: "Обменяем изделие в течение 14 дней с момента получения при сохранении товарного вида.",
+      },
+      {
+        icon: <RotateCcw size={16} strokeWidth={1.5} />,
+        title: "Возврат",
+        desc: "Возврат в течение 14 дней. Деньги вернём на карту в течение 3–5 рабочих дней.",
+      },
+    ].map((item) => (
+      <div key={item.title} className="flex gap-3">
+        <div className="mt-0.5 text-ink-50 flex-shrink-0">{item.icon}</div>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide mb-1">{item.title}</p>
+          <p className="text-xs text-ink-50 leading-relaxed">{item.desc}</p>
         </div>
       </div>
+    ))}
+  </div>
+)
+
+const StoreAvailabilityTab = () => (
+  <div className="py-4">
+    <div className="flex gap-3">
+      <MapPin size={16} strokeWidth={1.5} className="text-ink-50 mt-0.5 flex-shrink-0" />
+      <div>
+        <p className="text-xs text-ink-50 mb-2">Проверить наличие в розничных магазинах Milavitsa.</p>
+        <button className="btn-secondary text-2xs py-2 px-4">
+          Найти магазин
+        </button>
+      </div>
     </div>
-  )
-}
+  </div>
+)
 
 export default ProductTabs

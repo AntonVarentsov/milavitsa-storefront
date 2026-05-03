@@ -1,8 +1,6 @@
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
-
-import InteractiveLink from "@modules/common/components/interactive-link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductPreview from "@modules/products/components/product-preview"
 
 export default async function ProductRail({
@@ -13,7 +11,7 @@ export default async function ProductRail({
   region: HttpTypes.StoreRegion
 }) {
   const {
-    response: { products: pricedProducts },
+    response: { products },
   } = await listProducts({
     regionId: region.id,
     queryParams: {
@@ -22,25 +20,25 @@ export default async function ProductRail({
     },
   })
 
-  if (!pricedProducts) {
-    return null
-  }
+  if (!products || products.length === 0) return null
 
   return (
-    <div className="content-container py-12 small:py-24">
-      <div className="flex justify-between mb-8">
-        <Text className="txt-xlarge">{collection.title}</Text>
-        <InteractiveLink href={`/collections/${collection.handle}`}>
-          View all
-        </InteractiveLink>
+    <div className="content-container py-10">
+      <div className="flex items-baseline justify-between mb-6">
+        <h2 className="text-lg uppercase tracking-wide font-bold">{collection.title}</h2>
+        <LocalizedClientLink
+          href={`/collections/${collection.handle}`}
+          className="text-2xs uppercase tracking-wide text-ink-50 hover:text-brand-red transition-colors border-b border-ink-25 pb-0.5"
+        >
+          Смотреть все
+        </LocalizedClientLink>
       </div>
-      <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-24 small:gap-y-36">
-        {pricedProducts &&
-          pricedProducts.map((product) => (
-            <li key={product.id}>
-              <ProductPreview product={product} region={region} isFeatured />
-            </li>
-          ))}
+      <ul className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-x-2.5 gap-y-8">
+        {products.slice(0, 4).map((product) => (
+          <li key={product.id}>
+            <ProductPreview product={product} region={region} isFeatured />
+          </li>
+        ))}
       </ul>
     </div>
   )
