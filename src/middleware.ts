@@ -5,6 +5,27 @@ const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
+const STOREFRONT_CONFIG: Record<
+  string,
+  { regionCountry: string; channelId: string }
+> = {
+  "store.milavitsa-kazan.ru": {
+    regionCountry: "ru",
+    channelId: process.env.NEXT_PUBLIC_CHANNEL_KAZAN ?? "",
+  },
+  "store.milavitsa-nn.ru": {
+    regionCountry: "ru",
+    channelId: process.env.NEXT_PUBLIC_CHANNEL_NN ?? "",
+  },
+}
+
+function getStorefrontConfig(hostname: string) {
+  return (
+    STOREFRONT_CONFIG[hostname] ??
+    STOREFRONT_CONFIG["store.milavitsa-nn.ru"]
+  )
+}
+
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
   regionMapUpdated: Date.now(),
@@ -114,7 +135,19 @@ export async function middleware(request: NextRequest) {
 
   const regionMap = await getRegionMap(cacheId)
 
-  const countryCode = regionMap && (await getCountryCode(request, regionMap))
+  // Detect storefront by hostname and inject channel id into request headers
+  const hostname = request.headers.get("host")?.split(":")[0] ?? ""
+  const storefrontConfig = getStorefrontConfig(hostname)
+  if (storefrontConfig.channelId) {
+    response.headers.set("x-storefront-channel", storefrontConfig.channelId)
+  }
+
+  // Use storefront-specific country as the regional default when no URL/Vercel hint is present
+  const effectiveDefaultRegion = storefrontConfig.regionCountry || DEFAULT_REGION
+  const countryCode =
+    regionMap &&
+    (await getCountryCode(request, regionMap)) ||
+    (regionMap.has(effectiveDefaultRegion) ? effectiveDefaultRegion : undefined)
 
   const urlHasCountryCode =
     countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
