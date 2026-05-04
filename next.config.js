@@ -39,7 +39,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "s3.timeweb.cloud",
+        hostname: "s3.twcstorage.ru",
       },
     ],
   },
