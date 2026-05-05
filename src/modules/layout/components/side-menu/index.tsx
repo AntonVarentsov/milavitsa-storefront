@@ -30,11 +30,15 @@ type SideMenuProps = {
   regions?: unknown
   locales?: unknown
   currentLocale?: unknown
+  isTransparent?: boolean
 }
 
-export default function SideMenu(_props: SideMenuProps) {
+export default function SideMenu({ isTransparent = false }: SideMenuProps) {
   const [open, setOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<"catalog" | "collections" | null>(null)
+
+  const barTransition = "transition-colors duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
+  const barColor = isTransparent ? "bg-white" : "bg-ink"
 
   return (
     <>
@@ -45,9 +49,9 @@ export default function SideMenu(_props: SideMenuProps) {
         aria-label="Меню"
         data-testid="nav-menu-button"
       >
-        <span className="w-6 h-[1.5px] bg-ink" />
-        <span className="w-6 h-[1.5px] bg-ink" />
-        <span className="w-4 h-[1.5px] bg-ink" />
+        <span className={`w-6 h-[1.5px] ${barColor} ${barTransition}`} />
+        <span className={`w-6 h-[1.5px] ${barColor} ${barTransition}`} />
+        <span className={`w-4 h-[1.5px] ${barColor} ${barTransition}`} />
       </button>
 
       {/* Backdrop */}

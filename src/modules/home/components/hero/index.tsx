@@ -31,7 +31,7 @@ export default function Hero() {
   }, [emblaApi])
 
   return (
-    <div className="relative overflow-hidden" style={{ height: "min(100vh, 720px)" }}>
+    <div className="-mt-[92px] relative overflow-hidden" style={{ height: "100svh" }}>
       <div ref={emblaRef} className="overflow-hidden h-full">
         <div className="flex h-full">
           {heroSlides.map((slide, i) => (

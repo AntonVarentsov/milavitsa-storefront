@@ -9,14 +9,26 @@ const messages = [
   "Скидка 15% на первый заказ при подписке на рассылку",
 ]
 
-export default function NotificationBar() {
+interface NotificationBarProps {
+  isOpaque?: boolean
+}
+
+export default function NotificationBar({ isOpaque = true }: NotificationBarProps) {
   const [closed, setClosed] = useState(false)
   const [idx] = useState(0)
 
   if (closed) return null
 
+  const transition = "transition-colors duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
+
   return (
-    <div className="h-notif-h bg-brand-red text-white flex items-center justify-center relative">
+    <div
+      className={`h-notif-h flex items-center justify-center relative ${transition} ${
+        isOpaque
+          ? "bg-white text-ink-50 border-b border-ink-20"
+          : "bg-transparent text-white"
+      }`}
+    >
       <p className="text-2xs uppercase tracking-wide font-bold px-8 text-center">
         {messages[idx % messages.length]}
       </p>
