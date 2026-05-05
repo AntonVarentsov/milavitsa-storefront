@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import type { ReactNode } from "react"
 import Image from "next/image"
 import { Search, User, Heart } from "lucide-react"
@@ -19,6 +19,7 @@ export default function NavBar({ regions, cartSlot }: NavBarProps) {
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState(false)
   const pathname = usePathname()
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   // Only homepage gets transparent header — other pages are always opaque
   const pathWithoutCountry = pathname.replace(/^\/[a-z]{2}(\/|$)/, "/")
@@ -32,10 +33,26 @@ export default function NavBar({ regions, cartSlot }: NavBarProps) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  // Отслеживаем реальную высоту nav-блока (меняется при закрытии уведомления)
+  // и пишем в CSS-переменную, чтобы Hero мог динамически скорректировать отступ
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      document.documentElement.style.setProperty(
+        "--nav-height",
+        `${entry.contentRect.height}px`
+      )
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   const transition = "transition-colors duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
 
   return (
     <div
+      ref={wrapperRef}
       className="sticky top-0 inset-x-0 z-50"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

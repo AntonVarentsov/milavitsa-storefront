@@ -49,7 +49,10 @@ export default function Hero() {
   }, [emblaApi])
 
   return (
-    <div className="-mt-[92px] relative overflow-hidden" style={{ height: "100svh" }}>
+    <div
+      className="relative overflow-hidden"
+      style={{ marginTop: "calc(-1 * var(--nav-height, 92px))", height: "100svh" }}
+    >
       <div ref={emblaRef} className="overflow-hidden h-full">
         <div className="flex h-full">
           {heroSlides.map((slide, i) => (
