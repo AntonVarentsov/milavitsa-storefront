@@ -92,13 +92,6 @@ export default function NavBar({ regions, cartSlot }: NavBarProps) {
               isOpaque ? "text-ink-50" : "text-white"
             }`}
           >
-            <LocalizedClientLink
-              href="/store"
-              className="hidden md:flex items-center text-2xs uppercase tracking-wide font-bold hover:text-brand-red transition-colors"
-            >
-              Каталог
-            </LocalizedClientLink>
-
             <button
               className="w-9 h-9 hidden md:flex items-center justify-center hover:text-brand-red transition-colors"
               aria-label="Поиск"

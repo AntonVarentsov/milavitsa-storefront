@@ -1,9 +1,9 @@
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import Image from "next/image"
 import PreviewPrice from "./price"
 import WishlistButton from "./wishlist-button"
+import ProductPreviewImage from "./image"
 
 export default async function ProductPreview({
   product,
@@ -16,7 +16,12 @@ export default async function ProductPreview({
 }) {
   const { cheapestPrice } = getProductPrice({ product })
 
-  const thumbnail = product.thumbnail || product.images?.[0]?.url
+  // Собираем все уникальные изображения: thumbnail первым, потом остальные
+  const allImages = [
+    ...(product.thumbnail ? [product.thumbnail] : []),
+    ...(product.images?.map((img) => img.url).filter(Boolean) ?? []),
+  ]
+  const images = [...new Set(allImages)] as string[]
 
   return (
     <LocalizedClientLink
@@ -24,26 +29,13 @@ export default async function ProductPreview({
       className="group block"
       data-testid="product-wrapper"
     >
-      {/* Image container 2:3 */}
-      <div className="relative aspect-product overflow-hidden bg-surface-silk">
-        {thumbnail ? (
-          <Image
-            src={thumbnail}
-            alt={product.title ?? ""}
-            fill
-            className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 760px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={75}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface-silk">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-ink-25">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-          </div>
-        )}
+      {/* Image container */}
+      <div className="relative">
+        <ProductPreviewImage
+          images={images}
+          title={product.title ?? ""}
+          sizes="(max-width: 760px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        />
 
         {/* Кнопка «Избранное» */}
         <WishlistButton />

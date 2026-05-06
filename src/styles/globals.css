@@ -144,7 +144,11 @@ h1, h2, h3, h4, h5, h6 {
 
 @layer components {
   .content-container {
-    @apply max-w-[1440px] w-full mx-auto px-6;
+    @apply max-w-[1920px] w-full mx-auto px-6;
+  }
+
+  .catalog-container {
+    @apply w-full px-4 md:px-6;
   }
 
   /* Legacy text utilities (используются в Medusa starter) */

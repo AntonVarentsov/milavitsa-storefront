@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -36,7 +35,7 @@ export default function CategoryTemplate({
   const totalProducts = category.products?.length ?? 0
 
   return (
-    <div className="content-container py-10" data-testid="category-container">
+    <div className="catalog-container py-10" data-testid="category-container">
       {/* Breadcrumbs */}
       {parents.length > 0 && (
         <nav className="flex items-center gap-1 mb-4 text-2xs text-ink-50">
@@ -89,26 +88,16 @@ export default function CategoryTemplate({
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-start gap-8">
-        {/* Фильтры */}
-        <div className="md:min-w-[220px]">
-          <RefinementList sortBy={sort} data-testid="sort-by-container" />
-        </div>
-
-        {/* Товары */}
-        <div className="flex-1">
-          <Suspense
-            fallback={<SkeletonProductGrid numberOfProducts={category.products?.length ?? 8} />}
-          >
-            <PaginatedProducts
-              sortBy={sort}
-              page={pageNumber}
-              categoryId={category.id}
-              countryCode={countryCode}
-            />
-          </Suspense>
-        </div>
-      </div>
+      <Suspense
+        fallback={<SkeletonProductGrid numberOfProducts={category.products?.length ?? 8} />}
+      >
+        <PaginatedProducts
+          sortBy={sort}
+          page={pageNumber}
+          categoryId={category.id}
+          countryCode={countryCode}
+        />
+      </Suspense>
     </div>
   )
 }

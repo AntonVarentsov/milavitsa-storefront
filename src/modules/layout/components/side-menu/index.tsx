@@ -38,20 +38,17 @@ export default function SideMenu({ isTransparent = false }: SideMenuProps) {
   const [activeSection, setActiveSection] = useState<"catalog" | "collections" | null>(null)
 
   const barTransition = "transition-colors duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-  const barColor = isTransparent ? "bg-white" : "bg-ink"
 
   return (
     <>
-      {/* Кнопка бургер */}
+      {/* Кнопка «Каталог» */}
       <button
         onClick={() => setOpen(true)}
-        className="flex flex-col gap-[5px] justify-center items-center w-10 h-10 hover:opacity-70 transition-opacity"
+        className={`text-2xs uppercase tracking-wide font-bold hover:opacity-70 transition-opacity ${barTransition} ${isTransparent ? "text-white" : "text-ink"}`}
         aria-label="Меню"
         data-testid="nav-menu-button"
       >
-        <span className={`w-6 h-[1.5px] ${barColor} ${barTransition}`} />
-        <span className={`w-6 h-[1.5px] ${barColor} ${barTransition}`} />
-        <span className={`w-4 h-[1.5px] ${barColor} ${barTransition}`} />
+        Каталог
       </button>
 
       {/* Backdrop */}
