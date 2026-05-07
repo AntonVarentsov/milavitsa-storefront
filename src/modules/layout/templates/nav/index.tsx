@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { listRegions } from "@lib/data/regions"
+import { listCollections } from "@lib/data/collections"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
@@ -7,10 +8,12 @@ import NavBar from "./nav-bar"
 
 export default async function Nav() {
   const regions = await listRegions().then((r: StoreRegion[]) => r)
+  const { collections } = await listCollections({ fields: "id,handle,title" }).catch(() => ({ collections: [] }))
 
   return (
     <NavBar
       regions={regions}
+      collections={collections}
       cartSlot={
         <Suspense
           fallback={

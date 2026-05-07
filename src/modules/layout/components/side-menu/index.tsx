@@ -4,6 +4,7 @@ import { useState } from "react"
 import { X, ChevronRight } from "lucide-react"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
+import { StoreCollection } from "@medusajs/types"
 
 const catalogSections = [
   { name: "Базовая коллекция", href: "/categories/bazovaya-kollekciya" },
@@ -18,25 +19,15 @@ const catalogEditorial = [
   { name: "Скоро в продаже", href: "/categories/skoro-v-prodazhe" },
 ]
 
-const collections = [
-  { name: "Венский вальс", href: "/collections/venskiy-vals" },
-  { name: "Дольче вита", href: "/collections/dolche-vita" },
-  { name: "Левада", href: "/collections/levada" },
-  { name: "Нежное объятие", href: "/collections/nezhnoe-obiyatie" },
-  { name: "Прибрежный сад", href: "/collections/pribrezhnyy-sad" },
-  { name: "Прикосновение ветра", href: "/collections/prikosnovenie-vetra" },
-  { name: "Фаворитка", href: "/collections/favoritka" },
-  { name: "Цветочная магия", href: "/collections/tsvetochnaya-magiya" },
-]
-
 type SideMenuProps = {
   regions?: unknown
   locales?: unknown
   currentLocale?: unknown
   isTransparent?: boolean
+  collections?: StoreCollection[]
 }
 
-export default function SideMenu({ isTransparent = false }: SideMenuProps) {
+export default function SideMenu({ isTransparent = false, collections = [] }: SideMenuProps) {
   const [open, setOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<"catalog" | "collections" | null>(null)
 
@@ -134,33 +125,35 @@ export default function SideMenu({ isTransparent = false }: SideMenuProps) {
           </div>
 
           {/* Коллекции */}
-          <div className="mb-8">
-            <button
-              className="flex items-center justify-between w-full mb-4 text-xs uppercase tracking-wide font-bold text-ink"
-              onClick={() => setActiveSection(activeSection === "collections" ? null : "collections")}
-            >
-              <span>Коллекции</span>
-              <ChevronRight
-                size={16}
-                className={`transition-transform ${activeSection === "collections" ? "rotate-90" : ""}`}
-              />
-            </button>
-            {activeSection === "collections" && (
-              <ul className="flex flex-col gap-3 pl-2">
-                {collections.map((col) => (
-                  <li key={col.href}>
-                    <LocalizedClientLink
-                      href={col.href}
-                      className="text-sm text-ink hover:text-brand-red transition-colors"
-                      onClick={() => setOpen(false)}
-                    >
-                      {col.name}
-                    </LocalizedClientLink>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {collections.length > 0 && (
+            <div className="mb-8">
+              <button
+                className="flex items-center justify-between w-full mb-4 text-xs uppercase tracking-wide font-bold text-ink"
+                onClick={() => setActiveSection(activeSection === "collections" ? null : "collections")}
+              >
+                <span>Коллекции</span>
+                <ChevronRight
+                  size={16}
+                  className={`transition-transform ${activeSection === "collections" ? "rotate-90" : ""}`}
+                />
+              </button>
+              {activeSection === "collections" && (
+                <ul className="flex flex-col gap-3 pl-2">
+                  {collections.map((col) => (
+                    <li key={col.id}>
+                      <LocalizedClientLink
+                        href={`/collections/${col.handle}`}
+                        className="text-sm text-ink hover:text-brand-red transition-colors"
+                        onClick={() => setOpen(false)}
+                      >
+                        {col.title}
+                      </LocalizedClientLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {/* Ссылки */}
           <div className="border-t border-ink-20 pt-6 flex flex-col gap-4">

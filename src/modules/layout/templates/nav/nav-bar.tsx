@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 import Image from "next/image"
 import { Search, User, Heart } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { StoreRegion } from "@medusajs/types"
+import { StoreRegion, StoreCollection } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import SideMenu from "@modules/layout/components/side-menu"
 import NotificationBar from "@modules/layout/components/notification-bar"
@@ -13,9 +13,10 @@ import NotificationBar from "@modules/layout/components/notification-bar"
 interface NavBarProps {
   regions: StoreRegion[]
   cartSlot: ReactNode
+  collections?: StoreCollection[]
 }
 
-export default function NavBar({ regions, cartSlot }: NavBarProps) {
+export default function NavBar({ regions, cartSlot, collections = [] }: NavBarProps) {
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState(false)
   const pathname = usePathname()
@@ -69,7 +70,7 @@ export default function NavBar({ regions, cartSlot }: NavBarProps) {
         <nav className="content-container flex items-center justify-between h-full">
           {/* Left: Burger */}
           <div className="flex-1 basis-0 flex items-center">
-            <SideMenu regions={regions} isTransparent={!isOpaque} />
+            <SideMenu regions={regions} isTransparent={!isOpaque} collections={collections} />
           </div>
 
           {/* Center: Logo */}
