@@ -5,14 +5,17 @@ import { X, ChevronRight } from "lucide-react"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
 
-const categories = [
-  { name: "Бюстгальтеры", href: "/categories/byustgaltery" },
-  { name: "Трусы и шортики", href: "/categories/trusy-i-shortiki" },
-  { name: "Корсеты и боди", href: "/categories/korsety-i-bodi" },
+const catalogSections = [
+  { name: "Базовая коллекция", href: "/categories/bazovaya-kollekciya" },
+  { name: "Модная коллекция", href: "/categories/modnaya-kollekciya" },
+  { name: "Эксклюзивная коллекция Alisee", href: "/categories/eksklyuzivnaya-kollekciya-alisee" },
   { name: "Купальники", href: "/categories/kupalniki" },
-  { name: "Одежда для дома", href: "/categories/odezhda-dlya-doma" },
-  { name: "Базовое бельё", href: "/categories/bazovoe-belyo" },
-  { name: "Спортивное", href: "/categories/sportivnoe" },
+]
+
+const catalogEditorial = [
+  { name: "Новинки", href: "/categories/novinki" },
+  { name: "Бестселлеры", href: "/categories/bestsellery" },
+  { name: "Скоро в продаже", href: "/categories/skoro-v-prodazhe" },
 ]
 
 const collections = [
@@ -103,7 +106,19 @@ export default function SideMenu({ isTransparent = false }: SideMenuProps) {
             </button>
             {activeSection === "catalog" && (
               <ul className="flex flex-col gap-3 pl-2">
-                {categories.map((cat) => (
+                {catalogSections.map((cat) => (
+                  <li key={cat.href}>
+                    <LocalizedClientLink
+                      href={cat.href}
+                      className="text-sm text-ink hover:text-brand-red transition-colors"
+                      onClick={() => setOpen(false)}
+                    >
+                      {cat.name}
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+                <li className="border-t border-ink-10 my-1" />
+                {catalogEditorial.map((cat) => (
                   <li key={cat.href}>
                     <LocalizedClientLink
                       href={cat.href}

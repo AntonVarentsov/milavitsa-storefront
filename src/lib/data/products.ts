@@ -89,6 +89,22 @@ export const listProducts = async ({
     })
 }
 
+export const listProductTypes = async (): Promise<
+  { id: string; value: string }[]
+> => {
+  return sdk.client
+    .fetch<{ product_types: { id: string; value: string }[] }>(
+      "/store/product-types",
+      {
+        method: "GET",
+        next: { tags: ["product-types"] },
+        cache: "force-cache",
+      }
+    )
+    .then(({ product_types }) => product_types ?? [])
+    .catch(() => [])
+}
+
 export const getProductSeoByHandle = async (handle: string) => {
   return sdk.client
     .fetch<{ seo: Record<string, string | boolean | null> | null }>(

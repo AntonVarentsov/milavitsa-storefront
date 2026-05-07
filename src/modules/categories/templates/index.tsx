@@ -2,26 +2,32 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import RefinementList from "@modules/store/components/refinement-list"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { ChevronRight } from "lucide-react"
+import { listProductTypes } from "@lib/data/products"
 
-export default function CategoryTemplate({
+export default async function CategoryTemplate({
   category,
   sortBy,
   page,
+  typeId,
   countryCode,
 }: {
   category: HttpTypes.StoreProductCategory
   sortBy?: SortOptions
   page?: string
+  typeId?: string
   countryCode: string
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
   if (!category || !countryCode) notFound()
+
+  const productTypes = await listProductTypes()
 
   const parents = [] as HttpTypes.StoreProductCategory[]
   const getParents = (cat: HttpTypes.StoreProductCategory) => {
@@ -88,6 +94,12 @@ export default function CategoryTemplate({
         </div>
       )}
 
+      <RefinementList
+        sortBy={sort}
+        productTypes={productTypes}
+        selectedTypeId={typeId}
+      />
+
       <Suspense
         fallback={<SkeletonProductGrid numberOfProducts={category.products?.length ?? 8} />}
       >
@@ -95,6 +107,7 @@ export default function CategoryTemplate({
           sortBy={sort}
           page={pageNumber}
           categoryId={category.id}
+          typeId={typeId}
           countryCode={countryCode}
         />
       </Suspense>
