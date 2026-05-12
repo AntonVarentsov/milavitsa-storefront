@@ -1,6 +1,10 @@
 import { getBaseURL } from "@lib/util/env"
-import { Metadata } from "next"
+import { Metadata, Viewport } from "next"
 import "styles/globals.css"
+
+export const viewport: Viewport = {
+  themeColor: "#C82230",
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -10,7 +14,6 @@ export const metadata: Metadata = {
   },
   description:
     "Официальный интернет-магазин Milavitsa. Женское нижнее бельё, купальники и одежда для дома.",
-  themeColor: "#C82230",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
