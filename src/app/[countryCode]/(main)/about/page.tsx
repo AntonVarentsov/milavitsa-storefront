@@ -41,7 +41,7 @@ export default function AboutPage() {
           <p className="text-2xs uppercase tracking-widest text-ink-50 mb-3">
             с 1908 года
           </p>
-          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-ink leading-none">
+          <h1 className="text-3xl md:text-[52px] font-black uppercase tracking-tight text-ink leading-none">
             О бренде
           </h1>
           <p className="mt-6 max-w-xl mx-auto text-sm text-ink-50 leading-relaxed">
@@ -78,7 +78,7 @@ export default function AboutPage() {
           <dl className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {STATS.map(({ value, label }) => (
               <div key={label}>
-                <dt className="text-3xl md:text-4xl font-black text-white leading-none mb-2">
+                <dt className="text-3xl md:text-[40px] font-black text-white leading-none mb-2">
                   {value}
                 </dt>
                 <dd className="text-2xs uppercase tracking-widest text-white/50">
