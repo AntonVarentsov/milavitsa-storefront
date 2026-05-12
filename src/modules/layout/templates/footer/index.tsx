@@ -27,11 +27,11 @@ export default async function Footer() {
               Нижнее бельё с 1908 года. Качество, проверенное временем.
             </p>
             <div className="flex flex-col gap-1">
-              <a href="tel:+74951234567" className="text-xs text-ink hover:text-brand-red transition-colors">
-                +7 (495) 123-45-67
+              <a href="tel:88005553987" className="text-xs text-ink hover:text-brand-red transition-colors">
+                8 800-555-3-987
               </a>
-              <a href="mailto:info@milavitsa.ru" className="text-xs text-ink hover:text-brand-red transition-colors">
-                info@milavitsa.ru
+              <a href="mailto:milavitsa-nn@mail.ru" className="text-xs text-ink hover:text-brand-red transition-colors">
+                milavitsa-nn@mail.ru
               </a>
             </div>
           </div>
