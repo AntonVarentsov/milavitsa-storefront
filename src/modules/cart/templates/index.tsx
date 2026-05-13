@@ -2,6 +2,7 @@ import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import RecentlyViewedSection from "@modules/cart/components/recently-viewed"
 import { HttpTypes } from "@medusajs/types"
 import { ChevronRight } from "lucide-react"
 
@@ -45,6 +46,8 @@ const CartTemplate = ({
         ) : (
           <EmptyCartMessage />
         )}
+
+        <RecentlyViewedSection />
       </div>
     </div>
   )

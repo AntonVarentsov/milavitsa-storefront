@@ -8,6 +8,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import ProductActionsWrapper from "./product-actions-wrapper"
+import RecentlyViewedTracker from "@modules/products/components/recently-viewed-tracker"
 import { ChevronRight } from "lucide-react"
 
 type ProductTemplateProps = {
@@ -25,11 +26,17 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 }) => {
   if (!product || !product.id) return notFound()
 
-  // Берём первую категорию для хлебных крошек
   const category = product.categories?.[0]
 
   return (
     <>
+      <RecentlyViewedTracker
+        item={{
+          handle: product.handle ?? "",
+          title: product.title ?? "",
+          thumbnail: product.thumbnail ?? null,
+        }}
+      />
       <div data-testid="product-container">
         {/* Хлебные крошки */}
         <nav className="catalog-container pt-5 pb-3 flex items-center gap-1 text-2xs text-ink-50">
