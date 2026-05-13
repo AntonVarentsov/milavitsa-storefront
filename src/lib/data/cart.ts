@@ -425,6 +425,39 @@ export async function placeOrder(cartId?: string) {
   return cartRes.cart
 }
 
+export async function placeOrderRobokassa(
+  robokassaUrl: string,
+  cartId?: string
+) {
+  const id = cartId || (await getCartId())
+
+  if (!id) {
+    throw new Error("No existing cart found when placing an order")
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const cartRes = await sdk.store.cart
+    .complete(id, {}, headers)
+    .then(async (cartRes) => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+      return cartRes
+    })
+    .catch(medusaError)
+
+  if (cartRes?.type === "order") {
+    const orderCacheTag = await getCacheTag("orders")
+    revalidateTag(orderCacheTag)
+    removeCartId()
+    redirect(robokassaUrl)
+  }
+
+  return cartRes.cart
+}
+
 /**
  * Updates the countrycode param and revalidates the regions cache
  * @param regionId

@@ -1,7 +1,7 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
-import { placeOrder } from "@lib/data/cart"
+import { isManual, isRobokassa, isStripeLike } from "@lib/constants"
+import { placeOrder, placeOrderRobokassa } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
@@ -38,6 +38,14 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+    case isRobokassa(paymentSession?.provider_id):
+      return (
+        <RobokassaPaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
       )
     default:
       return <Button disabled>Выберите способ оплаты</Button>
@@ -146,6 +154,56 @@ const StripePaymentButton = ({
       <ErrorMessage
         error={errorMessage}
         data-testid="stripe-payment-error-message"
+      />
+    </>
+  )
+}
+
+const RobokassaPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === "pending"
+  )
+  const redirectUrl = session?.data?.redirectUrl as string | undefined
+
+  const handlePayment = async () => {
+    if (!redirectUrl) {
+      setErrorMessage("Не удалось получить ссылку для оплаты")
+      return
+    }
+    setSubmitting(true)
+    try {
+      await placeOrderRobokassa(redirectUrl)
+    } catch (err: any) {
+      setErrorMessage(err.message)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady || !redirectUrl}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        data-testid={dataTestId}
+      >
+        Перейти к оплате
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="robokassa-payment-error-message"
       />
     </>
   )
