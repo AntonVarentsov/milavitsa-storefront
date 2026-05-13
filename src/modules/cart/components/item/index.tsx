@@ -1,12 +1,12 @@
 "use client"
 
-import { updateLineItem } from "@lib/data/cart"
+import { swapLineItemVariant, updateLineItem } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import DeleteButton from "@modules/common/components/delete-button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
-import { Minus, Plus } from "lucide-react"
+import { ChevronDown, Minus, Plus } from "lucide-react"
 import { useState } from "react"
 
 type ItemProps = {
@@ -14,6 +14,11 @@ type ItemProps = {
   type?: "full" | "preview"
   currencyCode: string
 }
+
+const isSize = (title?: string | null) =>
+  title?.toLowerCase().includes("размер") || title?.toLowerCase() === "size"
+const isColor = (title?: string | null) =>
+  title?.toLowerCase().includes("цвет") || title?.toLowerCase() === "color"
 
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
@@ -28,14 +33,35 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       .finally(() => setUpdating(false))
   }
 
-  const sizeOption = item.variant?.options?.find(
-    (o) => o.option?.title?.toLowerCase().includes("размер") || o.option?.title?.toLowerCase() === "size"
-  )
-  const colorOption = item.variant?.options?.find(
-    (o) => o.option?.title?.toLowerCase().includes("цвет") || o.option?.title?.toLowerCase() === "color"
-  )
-  const sizeLabel = sizeOption?.value ?? item.variant?.title ?? ""
-  const colorLabel = colorOption?.value ?? ""
+  const changeSize = async (newVariantId: string) => {
+    if (newVariantId === item.variant_id || updating) return
+    setError(null)
+    setUpdating(true)
+    await swapLineItemVariant({ lineId: item.id, quantity: item.quantity, variantId: newVariantId })
+      .catch((err) => setError(err.message))
+      .finally(() => setUpdating(false))
+  }
+
+  const currentVariantOptions = item.variant?.options ?? []
+  const currentColorValue = currentVariantOptions.find((o) => isColor(o.option?.title))?.value
+  const currentSizeValue = currentVariantOptions.find((o) => isSize(o.option?.title))?.value
+
+  const productVariants = (item as any).product?.variants as HttpTypes.StoreProductVariant[] | undefined
+
+  const sizeOptions = productVariants
+    ?.filter((v) => {
+      if (!currentColorValue) return true
+      const colorOpt = v.options?.find((o) => isColor(o.option?.title))
+      return !colorOpt || colorOpt.value === currentColorValue
+    })
+    .map((v) => ({
+      variantId: v.id ?? "",
+      size: v.options?.find((o) => isSize(o.option?.title))?.value ?? v.title ?? "",
+    }))
+    .filter((s) => s.size && s.variantId) ?? []
+
+  const colorLabel = currentColorValue ?? ""
+  const sizeLabel = currentSizeValue ?? item.variant?.title ?? ""
 
   if (type === "preview") {
     return (
@@ -64,7 +90,10 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   return (
     <div className="flex gap-5 py-6 border-b border-ink-10 last:border-b-0" data-testid="product-row">
       {/* Image */}
-      <LocalizedClientLink href={`/products/${item.product_handle}`} className="flex-shrink-0 w-[100px] small:w-[120px]">
+      <LocalizedClientLink
+        href={`/products/${item.product_handle}`}
+        className="flex-shrink-0 w-[120px] sm:w-[160px]"
+      >
         <div className="aspect-product overflow-hidden bg-surface-silk">
           <Thumbnail thumbnail={item.thumbnail} images={item.variant?.product?.images} size="square" />
         </div>
@@ -72,7 +101,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
 
       {/* Info + controls */}
       <div className="flex flex-1 justify-between gap-4 min-w-0">
-        <div className="flex flex-col gap-1.5 min-w-0">
+        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
           <LocalizedClientLink href={`/products/${item.product_handle}`}>
             <h3 className="text-xs font-bold uppercase tracking-wide text-brand-red hover:opacity-75 transition-opacity leading-snug line-clamp-3">
               {item.product_title}
@@ -88,14 +117,33 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           )}
 
           <div className="flex items-center gap-3 mt-2 flex-wrap">
-            {/* Size badge */}
-            {sizeLabel && (
+            {/* Size selector */}
+            {sizeOptions.length > 1 ? (
+              <div className="relative">
+                <select
+                  value={item.variant_id ?? ""}
+                  onChange={(e) => changeSize(e.target.value)}
+                  disabled={updating}
+                  className="appearance-none border border-ink-20 pl-3 pr-7 py-1 text-xs text-ink bg-white focus:outline-none focus:border-ink-40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-w-[80px]"
+                >
+                  {sizeOptions.map((opt) => (
+                    <option key={opt.variantId} value={opt.variantId}>
+                      {opt.size}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={12}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-ink-50"
+                />
+              </div>
+            ) : sizeLabel ? (
               <div className="border border-ink-20 px-3 py-1 text-xs text-ink min-w-[52px] text-center">
                 {sizeLabel}
               </div>
-            )}
+            ) : null}
 
-            {/* Quantity control */}
+            {/* Quantity */}
             <div className="flex items-center border border-ink-20">
               <button
                 onClick={() => changeQuantity(item.quantity - 1)}
@@ -130,7 +178,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           {error && <p className="text-2xs text-feedback-error mt-1">{error}</p>}
         </div>
 
-        {/* Price */}
+        {/* Line total */}
         <div className="flex-shrink-0 text-right">
           <span className="text-sm font-bold text-ink">
             {convertToLocale({ amount: (item.unit_price ?? 0) * item.quantity, currency_code: currencyCode })}

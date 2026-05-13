@@ -24,7 +24,7 @@ import { getLocale } from "@lib/data/locale-actions"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+    "*items, *region, *items.product, *items.product.variants, *items.product.variants.options, *items.product.variants.options.option, *items.variant, *items.variant.options, *items.variant.options.option, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
   if (!id) {
     return null
@@ -211,6 +211,32 @@ export async function deleteLineItem(lineId: string) {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
+      const fulfillmentCacheTag = await getCacheTag("fulfillment")
+      revalidateTag(fulfillmentCacheTag)
+    })
+    .catch(medusaError)
+}
+
+export async function swapLineItemVariant({
+  lineId,
+  quantity,
+  variantId,
+}: {
+  lineId: string
+  quantity: number
+  variantId: string
+}) {
+  const cartId = await getCartId()
+  if (!cartId) throw new Error("Missing cart ID")
+
+  const headers = { ...(await getAuthHeaders()) }
+
+  await sdk.store.cart.deleteLineItem(cartId, lineId, {}, headers).catch(medusaError)
+  await sdk.store.cart
+    .createLineItem(cartId, { variant_id: variantId, quantity }, {}, headers)
+    .then(async () => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
     })

@@ -28,7 +28,7 @@ const CartTemplate = ({
         </nav>
 
         {cart?.items?.length ? (
-          <div className="grid grid-cols-1 small:grid-cols-[1fr_340px] gap-x-12 large:gap-x-16 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_360px] gap-x-10 lg:gap-x-16 items-start">
             {/* Left: items */}
             <div>
               <h1 className="text-xl font-bold uppercase tracking-widest mb-6">
@@ -39,7 +39,7 @@ const CartTemplate = ({
             </div>
 
             {/* Right: summary */}
-            <div className="sticky top-12 mt-[52px]">
+            <div className="sm:sticky sm:top-12 mt-6 sm:mt-[52px]">
               <Summary cart={cart as any} customer={customer} />
             </div>
           </div>
