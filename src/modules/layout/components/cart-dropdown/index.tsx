@@ -57,16 +57,13 @@ const CartDropdown = ({
   }, [totalItems, itemRef.current])
 
   return (
-    <div
-      className="h-full z-50"
-      onMouseEnter={openAndCancel}
-      onMouseLeave={close}
-    >
+    <div className="h-full z-50">
       <Popover className="relative h-full">
         <PopoverButton
           className="w-9 h-9 flex items-center justify-center hover:text-brand-red transition-colors relative focus:outline-none"
           data-testid="nav-cart-link"
           aria-label={`Корзина, ${totalItems} товаров`}
+          onMouseEnter={openAndCancel}
         >
           <LocalizedClientLink href="/cart" className="flex items-center justify-center w-full h-full relative">
             <ShoppingBag size={20} strokeWidth={1.5} />
@@ -77,23 +74,42 @@ const CartDropdown = ({
             )}
           </LocalizedClientLink>
         </PopoverButton>
+
+        {/* Backdrop */}
         <Transition
           show={cartDropdownOpen}
           as={Fragment}
-          enter="transition ease-out duration-200"
-          enterFrom="opacity-0 translate-y-1"
-          enterTo="opacity-100 translate-y-0"
-          leave="transition ease-in duration-150"
-          leaveFrom="opacity-100 translate-y-0"
-          leaveTo="opacity-0 translate-y-1"
+          enter="transition ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div
+            className="hidden md:block fixed inset-0 bg-black/20 z-40"
+            onClick={close}
+          />
+        </Transition>
+
+        {/* Sidebar panel */}
+        <Transition
+          show={cartDropdownOpen}
+          as={Fragment}
+          enter="transition ease-out duration-300"
+          enterFrom="translate-x-full"
+          enterTo="translate-x-0"
+          leave="transition ease-in duration-200"
+          leaveFrom="translate-x-0"
+          leaveTo="translate-x-full"
         >
           <PopoverPanel
             static
-            className="hidden md:block absolute top-[calc(100%+1px)] right-0 bg-surface border border-ink-20 w-[420px] shadow-soft"
+            className="hidden md:flex fixed top-0 right-0 h-screen w-[420px] bg-surface shadow-2xl z-50 flex-col"
             data-testid="nav-cart-dropdown"
           >
             {/* Header */}
-            <div className="px-5 py-4 flex items-center justify-between border-b border-ink-20">
+            <div className="px-5 py-4 flex items-center justify-between border-b border-ink-20 flex-shrink-0">
               <h3 className="text-xs uppercase tracking-wide font-bold">
                 Добавлено в корзину
               </h3>
@@ -104,7 +120,7 @@ const CartDropdown = ({
 
             {cartState && cartState.items?.length ? (
               <>
-                <div className="overflow-y-scroll max-h-[360px] px-5 flex flex-col gap-5 no-scrollbar py-4">
+                <div className="flex-1 overflow-y-auto px-5 flex flex-col gap-5 no-scrollbar py-4">
                   {cartState.items
                     .sort((a, b) => ((a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1))
                     .map((item) => (
@@ -163,7 +179,7 @@ const CartDropdown = ({
                       </div>
                     ))}
                 </div>
-                <div className="px-5 py-4 border-t border-ink-20 flex flex-col gap-3">
+                <div className="px-5 py-4 border-t border-ink-20 flex flex-col gap-3 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-ink-50">Итого</span>
                     <span className="text-sm font-bold" data-testid="cart-subtotal">
@@ -178,20 +194,20 @@ const CartDropdown = ({
                       onClick={close}
                       className="btn-secondary flex-1 text-center text-xs py-2.5"
                     >
-                      Продолжить
+                      Продолжить покупки
                     </button>
                     <LocalizedClientLink
                       href="/cart"
                       className="btn-primary flex-1 text-center text-xs py-2.5"
                       data-testid="go-to-cart-button"
                     >
-                      В корзину
+                      Перейти в корзину
                     </LocalizedClientLink>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="py-16 flex flex-col gap-4 items-center justify-center">
+              <div className="flex-1 flex flex-col gap-4 items-center justify-center">
                 <ShoppingBag size={40} strokeWidth={1} className="text-ink-25" />
                 <p className="text-sm text-ink-50">Корзина пуста</p>
                 <LocalizedClientLink href="/store" onClick={close}>
