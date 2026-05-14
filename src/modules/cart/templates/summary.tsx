@@ -30,12 +30,8 @@ const Summary = ({ cart, customer }: SummaryProps) => {
       {/* Login prompt */}
       {!customer && (
         <p className="text-xs text-ink-60 leading-relaxed">
-          <LocalizedClientLink href="/account/login" className="underline underline-offset-2 hover:text-brand-red transition-colors">
-            Войдите
-          </LocalizedClientLink>
-          {" или "}
-          <LocalizedClientLink href="/account/register" className="underline underline-offset-2 hover:text-brand-red transition-colors">
-            зарегистрируйтесь
+          <LocalizedClientLink href="/account" className="underline underline-offset-2 hover:text-brand-red transition-colors">
+            Войдите или зарегистрируйтесь
           </LocalizedClientLink>
           , чтобы применить промокод или получить баллы за покупку.
         </p>
