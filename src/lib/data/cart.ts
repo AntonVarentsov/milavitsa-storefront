@@ -48,7 +48,11 @@ export async function retrieveCart(cartId?: string, fields?: string) {
       next,
       cache: "force-cache",
     })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+    .then(({ cart }: { cart: HttpTypes.StoreCart }) => {
+      // Обновляем TTL cookie при каждом обращении (sliding expiry)
+      setCartId(cart.id).catch(() => null)
+      return cart
+    })
     .catch(() => null)
 }
 

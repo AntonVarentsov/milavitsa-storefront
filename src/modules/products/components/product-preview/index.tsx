@@ -38,7 +38,7 @@ export default async function ProductPreview({
         />
 
         {/* Кнопка «Избранное» */}
-        <WishlistButton />
+        <WishlistButton productId={product.id!} />
 
         {/* Бейдж новинка */}
         {isFeatured && (

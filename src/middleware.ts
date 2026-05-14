@@ -133,6 +133,10 @@ export async function middleware(request: NextRequest) {
 
   let cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
+  const anonIdCookie = request.cookies.get("_anon_id")
+  const anonId = anonIdCookie?.value || crypto.randomUUID()
+  const isNewAnonId = !anonIdCookie?.value
+
   const regionMap = await getRegionMap(cacheId)
 
   // Detect storefront by hostname and inject channel id into request headers
@@ -152,9 +156,21 @@ export async function middleware(request: NextRequest) {
   const urlHasCountryCode =
     countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
 
+  function applyAnonId(res: NextResponse) {
+    if (isNewAnonId) {
+      res.cookies.set("_anon_id", anonId, {
+        maxAge: 60 * 60 * 24 * 365, // 1 год
+        httpOnly: false, // клиент должен читать для аналитики
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+      })
+    }
+    return res
+  }
+
   // if one of the country codes is in the url and the cache id is set, return next
   if (urlHasCountryCode && cacheIdCookie) {
-    return NextResponse.next()
+    return applyAnonId(NextResponse.next())
   }
 
   // if one of the country codes is in the url and the cache id is not set, set the cache id and redirect
@@ -163,7 +179,7 @@ export async function middleware(request: NextRequest) {
       maxAge: 60 * 60 * 24,
     })
 
-    return response
+    return applyAnonId(response)
   }
 
   // check if the url is a static asset
@@ -188,7 +204,7 @@ export async function middleware(request: NextRequest) {
     )
   }
 
-  return response
+  return applyAnonId(response)
 }
 
 export const config = {

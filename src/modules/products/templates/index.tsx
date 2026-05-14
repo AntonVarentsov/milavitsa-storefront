@@ -35,6 +35,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           handle: product.handle ?? "",
           title: product.title ?? "",
           thumbnail: product.thumbnail ?? null,
+          product_id: product.id,
         }}
       />
       <div data-testid="product-container">

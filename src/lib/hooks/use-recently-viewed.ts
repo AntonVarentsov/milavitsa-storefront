@@ -1,10 +1,11 @@
 const STORAGE_KEY = "recently_viewed"
-const MAX_ITEMS = 8
+const MAX_ITEMS = 20
 
 export type RecentlyViewedItem = {
   handle: string
   title: string
   thumbnail: string | null
+  product_id?: string
 }
 
 export function getRecentlyViewed(): RecentlyViewedItem[] {
