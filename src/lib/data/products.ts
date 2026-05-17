@@ -66,8 +66,14 @@ export const listProducts = async ({
           limit,
           offset,
           region_id: region?.id,
+          // Лёгкий дефолтный набор полей — оптимизирован под листинги (PLP, home, related).
+          // PDP перекрывает их через queryParams.fields = PDP_PRODUCT_FIELDS.
+          // ВАЖНО: используем только relation-expansion (`*foo`) и `+hidden`, не указываем
+          // явных скалярных полей (`id,handle,title`) — иначе Medusa переключается в режим
+          // «вернуть ТОЛЬКО перечисленное», и базовые скаляры/values отрезаются.
+          // sku варианта приходит по дефолту вместе с *variants.calculated_price.
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+            "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,",
           ...queryParams,
         },
         headers,

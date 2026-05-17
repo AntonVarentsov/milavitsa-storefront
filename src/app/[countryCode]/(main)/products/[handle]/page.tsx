@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts, getProductSeoByHandle } from "@lib/data/products"
+import { PDP_PRODUCT_FIELDS } from "@lib/data/product-fields"
 import { getRegion, listRegions } from "@lib/data/regions"
 import { getCategoryPath } from "@lib/data/categories"
 import ProductTemplate from "@modules/products/templates"
@@ -53,16 +54,65 @@ export async function generateStaticParams() {
   }
 }
 
+/**
+ * Подбирает дефолтный вариант продукта, когда пользователь зашёл на PDP без `?v_id`.
+ * Логика: первый цвет (в порядке product.options.values), у которого есть
+ * хотя бы один in-stock размер. Если все варианты out-of-stock — берём первый.
+ */
+function pickDefaultVariantId(
+  product: HttpTypes.StoreProduct
+): string | undefined {
+  const variants = product.variants ?? []
+  if (variants.length === 0) return undefined
+
+  const colorOption = (product.options ?? []).find(
+    (o) => (o.title ?? "").toLowerCase() === "цвет" || (o.title ?? "").toLowerCase() === "color"
+  )
+  const colorOrder = colorOption
+    ? (colorOption.values ?? []).map((v) => v.value)
+    : []
+
+  const isInStock = (v: HttpTypes.StoreProductVariant): boolean => {
+    if (!v.manage_inventory) return true
+    if (v.allow_backorder) return true
+    return (v.inventory_quantity ?? 0) > 0
+  }
+
+  const colorOfVariant = (v: HttpTypes.StoreProductVariant): string | undefined =>
+    (v.options ?? []).find(
+      (o) =>
+        (o as { option?: { title?: string } }).option?.title?.toLowerCase() === "цвет" ||
+        (o as { option?: { title?: string } }).option?.title?.toLowerCase() === "color"
+    )?.value
+
+  // Идём по цветам в порядке option values
+  if (colorOrder.length > 0) {
+    for (const colorName of colorOrder) {
+      const sameColor = variants.filter((v) => colorOfVariant(v) === colorName)
+      const inStock = sameColor.find(isInStock)
+      if (inStock) return inStock.id
+    }
+  }
+
+  // Fallback: первый in-stock variant, иначе первый вообще
+  return (variants.find(isInStock) ?? variants[0]).id
+}
+
 function getImagesForVariant(
   product: HttpTypes.StoreProduct,
   selectedVariantId?: string
 ) {
-  if (!selectedVariantId || !product.variants) {
+  if (!product.variants) {
     return product.images
   }
 
-  const variant = product.variants!.find((v) => v.id === selectedVariantId)
-  if (!variant || !variant.images.length) {
+  const variantId = selectedVariantId ?? pickDefaultVariantId(product)
+  if (!variantId) {
+    return product.images
+  }
+
+  const variant = product.variants!.find((v) => v.id === variantId)
+  if (!variant || !variant.images?.length) {
     return product.images
   }
 
@@ -84,7 +134,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const [{ response }, { seo }] = await Promise.all([
     listProducts({
       countryCode,
-      queryParams: { handle },
+      queryParams: { handle, fields: PDP_PRODUCT_FIELDS },
     }),
     getProductSeoByHandle(handle),
   ])
@@ -147,14 +197,14 @@ export default async function ProductPage(props: Props) {
 
   const pricedProduct = await listProducts({
     countryCode: params.countryCode,
-    queryParams: { handle: params.handle },
+    queryParams: { handle: params.handle, fields: PDP_PRODUCT_FIELDS },
   }).then(({ response }) => response.products[0])
-
-  const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
   if (!pricedProduct) {
     notFound()
   }
+
+  const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
   return (
     <ProductTemplate

@@ -1,4 +1,5 @@
 import { listProducts } from "@lib/data/products"
+import { PDP_PRODUCT_FIELDS } from "@lib/data/product-fields"
 import { HttpTypes } from "@medusajs/types"
 import ProductActions from "@modules/products/components/product-actions"
 
@@ -13,7 +14,7 @@ export default async function ProductActionsWrapper({
   region: HttpTypes.StoreRegion
 }) {
   const product = await listProducts({
-    queryParams: { id: [id] },
+    queryParams: { id: [id], fields: PDP_PRODUCT_FIELDS },
     regionId: region.id,
   }).then(({ response }) => response.products[0])
 

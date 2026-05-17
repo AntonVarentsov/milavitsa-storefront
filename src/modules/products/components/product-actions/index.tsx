@@ -61,6 +61,34 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     })
   }, [product.variants, options])
 
+  /**
+   * Для каждой опции — множество значений, совместимых с текущим выбором
+   * ДРУГИХ опций. Используется, чтобы дизаблить размеры, недоступные
+   * для выбранного цвета (и наоборот).
+   */
+  const availableValuesPerOption = useMemo(() => {
+    const map: Record<string, Set<string>> = {}
+    const allOptionIds = (product.options ?? []).map((o) => o.id)
+
+    for (const optId of allOptionIds) {
+      const set = new Set<string>()
+      for (const v of product.variants ?? []) {
+        const vmap = optionsAsKeymap(v.options) ?? {}
+        const compatible = allOptionIds.every((other) => {
+          if (other === optId) return true
+          const chosen = options[other]
+          if (!chosen) return true
+          return vmap[other] === chosen
+        })
+        if (compatible && vmap[optId]) {
+          set.add(vmap[optId])
+        }
+      }
+      map[optId] = set
+    }
+    return map
+  }, [product.options, product.variants, options])
+
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString())
     const value = isValidVariant ? selectedVariant?.id : null
@@ -127,6 +155,12 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
                 current={options[option.id]}
                 updateOption={setOptionValue}
                 title={option.title ?? ""}
+                colorSwatches={
+                  ((product.metadata as Record<string, unknown> | null)?.color_swatches as
+                    | Array<{ code: string; name: string; hex: string }>
+                    | undefined) ?? undefined
+                }
+                availableValues={availableValuesPerOption[option.id]}
                 data-testid="product-options"
                 disabled={!!disabled || isAdding}
               />
