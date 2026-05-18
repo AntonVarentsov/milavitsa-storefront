@@ -5,7 +5,7 @@ import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
-import { getRegion, retrieveRegion } from "./regions"
+import { getRegion } from "./regions"
 
 export const listProducts = async ({
   pageParam = 1,
@@ -30,15 +30,20 @@ export const listProducts = async ({
   const _pageParam = Math.max(pageParam, 1)
   const offset = _pageParam === 1 ? 0 : (_pageParam - 1) * limit
 
-  let region: HttpTypes.StoreRegion | undefined | null
-
-  if (countryCode) {
-    region = await getRegion(countryCode)
-  } else {
-    region = await retrieveRegion(regionId!)
+  // Если regionId уже известен, не дёргаем регион-эндпоинт повторно.
+  let resolvedRegionId = regionId
+  if (!resolvedRegionId && countryCode) {
+    const region = await getRegion(countryCode)
+    if (!region) {
+      return {
+        response: { products: [], count: 0 },
+        nextPage: null,
+      }
+    }
+    resolvedRegionId = region.id
   }
 
-  if (!region) {
+  if (!resolvedRegionId) {
     return {
       response: { products: [], count: 0 },
       nextPage: null,
@@ -65,15 +70,16 @@ export const listProducts = async ({
         query: {
           limit,
           offset,
-          region_id: region?.id,
+          region_id: resolvedRegionId,
           // Лёгкий дефолтный набор полей — оптимизирован под листинги (PLP, home, related).
           // PDP перекрывает их через queryParams.fields = PDP_PRODUCT_FIELDS.
           // ВАЖНО: используем только relation-expansion (`*foo`) и `+hidden`, не указываем
           // явных скалярных полей (`id,handle,title`) — иначе Medusa переключается в режим
           // «вернуть ТОЛЬКО перечисленное», и базовые скаляры/values отрезаются.
           // sku варианта приходит по дефолту вместе с *variants.calculated_price.
+          // metadata — color_swatches на карточке; inventory_quantity — isInStock.
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,",
+            "*variants.calculated_price,+variants.inventory_quantity,+metadata,",
           ...queryParams,
         },
         headers,
@@ -120,44 +126,79 @@ export const getProductSeoByHandle = async (handle: string) => {
 }
 
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Быстрый путь для sortBy=created_at: фильтрация и сортировка делегируются бэку,
+ * limit=12, страница приходит ровно той же, что и отображается.
+ * Для price_asc/price_desc Medusa Store API не поддерживает сортировку по
+ * variants.calculated_price.amount через ?order — используем fallback: тянем
+ * до 100 товаров одной страницей, сортируем в памяти, режем slice.
  */
 export const listProductsWithSort = async ({
-  page = 0,
+  page = 1,
   queryParams,
   sortBy = "created_at",
   countryCode,
+  regionId,
 }: {
   page?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
   sortBy?: SortOptions
-  countryCode: string
+  countryCode?: string
+  regionId?: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+  const _page = Math.max(page, 1)
 
+  const needsInMemorySort = sortBy === "price_asc" || sortBy === "price_desc"
+
+  if (!needsInMemorySort) {
+    // Быстрый путь: серверный order, серверный offset/limit
+    const order = sortBy === "created_at" ? "-created_at" : undefined
+
+    const {
+      response: { products, count },
+    } = await listProducts({
+      pageParam: _page,
+      queryParams: {
+        ...queryParams,
+        limit,
+        ...(order ? { order } : {}),
+      },
+      countryCode,
+      regionId,
+    })
+
+    const offset = (_page - 1) * limit
+    const nextPage = count > offset + limit ? _page + 1 : null
+
+    return {
+      response: { products, count },
+      nextPage,
+      queryParams,
+    }
+  }
+
+  // Fallback для сортировки по цене: тянем до 100 товаров, сортируем в памяти.
+  // Это медленнее, но Medusa Store API не сортирует по calculated_price.
   const {
     response: { products, count },
   } = await listProducts({
-    pageParam: 0,
+    pageParam: 1,
     queryParams: {
       ...queryParams,
       limit: 100,
     },
     countryCode,
+    regionId,
   })
 
   const sortedProducts = sortProducts(products, sortBy)
-
-  const pageParam = (page - 1) * limit
-
-  const nextPage = count > pageParam + limit ? pageParam + limit : null
-
-  const paginatedProducts = sortedProducts.slice(pageParam, pageParam + limit)
+  const offset = (_page - 1) * limit
+  const nextPage = count > offset + limit ? _page + 1 : null
+  const paginatedProducts = sortedProducts.slice(offset, offset + limit)
 
   return {
     response: {
