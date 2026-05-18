@@ -1,5 +1,6 @@
 "use server"
 
+import { cache } from "react"
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
@@ -42,26 +43,26 @@ export const listCollections = async (
     .then(({ collections }) => ({ collections, count: collections.length }))
 }
 
-export const getCollectionByHandle = async (
-  handle: string
-): Promise<HttpTypes.StoreCollection> => {
-  const next = {
-    ...(await getCacheOptions("collections")),
+export const getCollectionByHandle = cache(
+  async (handle: string): Promise<HttpTypes.StoreCollection> => {
+    const next = {
+      ...(await getCacheOptions("collections")),
+    }
+
+    return sdk.client
+      .fetch<HttpTypes.StoreCollectionListResponse>(`/store/collections`, {
+        query: { handle },
+        next,
+        cache: "force-cache",
+      })
+      .then(({ collections }) => collections[0])
   }
+)
 
-  return sdk.client
-    .fetch<HttpTypes.StoreCollectionListResponse>(`/store/collections`, {
-      query: { handle, fields: "*products" },
-      next,
-      cache: "force-cache",
-    })
-    .then(({ collections }) => collections[0])
-}
-
-export const getCollectionSeoByHandle = async (handle: string) => {
+export const getCollectionSeoByHandle = cache(async (handle: string) => {
   return sdk.client
     .fetch<{ seo: Record<string, string | boolean | null> | null }>(
       `/store/collections/seo?handle=${encodeURIComponent(handle)}`
     )
     .catch(() => ({ seo: null }))
-}
+})
