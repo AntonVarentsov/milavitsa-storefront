@@ -45,6 +45,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "milavitsa.com",
       },
+      {
+        protocol: "https",
+        hostname: "store.milavitsa-nn.ru",
+      },
     ],
   },
 }
