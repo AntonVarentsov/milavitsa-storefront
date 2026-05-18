@@ -4,7 +4,7 @@ import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 export default async function Footer() {
-  const { collections } = await listCollections({ fields: "*products" })
+  const { collections } = await listCollections({ fields: "id,handle,title" })
   const productCategories = await listCategories()
 
   return (
