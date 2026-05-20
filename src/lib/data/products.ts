@@ -162,12 +162,14 @@ export const listProductsWithSort = async ({
   sortBy = "created_at",
   countryCode,
   regionId,
+  q,
 }: {
   page?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
   sortBy?: SortOptions
   countryCode?: string
   regionId?: string
+  q?: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -176,10 +178,13 @@ export const listProductsWithSort = async ({
   const limit = queryParams?.limit || 12
   const _page = Math.max(page, 1)
 
+  const mergedParams = q
+    ? ({ ...queryParams, q } as HttpTypes.FindParams & HttpTypes.StoreProductParams)
+    : queryParams
+
   const needsInMemorySort = sortBy === "price_asc" || sortBy === "price_desc"
 
   if (!needsInMemorySort) {
-    // Быстрый путь: серверный order, серверный offset/limit
     const order = sortBy === "created_at" ? "-created_at" : undefined
 
     const {
@@ -187,7 +192,7 @@ export const listProductsWithSort = async ({
     } = await listProducts({
       pageParam: _page,
       queryParams: {
-        ...queryParams,
+        ...mergedParams,
         limit,
         ...(order ? { order } : {}),
       },
@@ -205,14 +210,12 @@ export const listProductsWithSort = async ({
     }
   }
 
-  // Fallback для сортировки по цене: тянем до 100 товаров, сортируем в памяти.
-  // Это медленнее, но Medusa Store API не сортирует по calculated_price.
   const {
     response: { products, count },
   } = await listProducts({
     pageParam: 1,
     queryParams: {
-      ...queryParams,
+      ...mergedParams,
       limit: 100,
     },
     countryCode,
