@@ -126,6 +126,7 @@ export const filterProductTypesForCategory = async (
     pageParam: 1,
     queryParams: {
       category_id: [categoryId],
+      fields: "id,type_id",
       limit: 500,
     },
     countryCode,
