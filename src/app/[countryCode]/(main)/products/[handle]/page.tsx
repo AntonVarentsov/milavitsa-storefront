@@ -12,6 +12,10 @@ type Props = {
   searchParams: Promise<{ v_id?: string }>
 }
 
+// ISR: страница продукта перевалидируется не реже раза в час.
+// Точечная инвалидация — через POST /api/revalidate (см. revalidate/route.ts).
+export const revalidate = 3600
+
 export async function generateStaticParams() {
   try {
     const countryCodes = await listRegions().then((regions) =>
