@@ -117,6 +117,31 @@ export const listProductTypes = async (): Promise<
     .catch(() => [])
 }
 
+export const listProductTypeIdsForCategory = async (
+  categoryId: string
+): Promise<string[]> => {
+  const headers = { ...(await getAuthHeaders()) }
+  return sdk.client
+    .fetch<{ products: { type_id?: string | null }[] }>(
+      "/store/products",
+      {
+        method: "GET",
+        query: {
+          category_id: [categoryId],
+          fields: "type_id",
+          limit: 500,
+        },
+        headers,
+        next: { tags: ["products"] },
+        cache: "force-cache",
+      }
+    )
+    .then(({ products }) =>
+      [...new Set(products.map((p) => p.type_id).filter(Boolean))] as string[]
+    )
+    .catch(() => [])
+}
+
 export const getProductSeoByHandle = async (handle: string) => {
   return sdk.client
     .fetch<{ seo: Record<string, string | boolean | null> | null }>(
