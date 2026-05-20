@@ -7,7 +7,7 @@ import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { ChevronRight } from "lucide-react"
-import { listProductTypes, listProductTypeIdsForCategory } from "@lib/data/products"
+import { listProductTypes, filterProductTypesForCategory } from "@lib/data/products"
 
 export default async function CategoryTemplate({
   category,
@@ -27,12 +27,11 @@ export default async function CategoryTemplate({
 
   if (!category || !countryCode) notFound()
 
-  const [productTypes, categoryTypeIds] = await Promise.all([
-    listProductTypes(),
-    listProductTypeIdsForCategory(category.id, countryCode),
-  ])
-  const filteredProductTypes = productTypes.filter((t) =>
-    categoryTypeIds.includes(t.id)
+  const productTypes = await listProductTypes()
+  const filteredProductTypes = await filterProductTypesForCategory(
+    productTypes,
+    category.id,
+    countryCode
   )
 
   const parents = [] as HttpTypes.StoreProductCategory[]

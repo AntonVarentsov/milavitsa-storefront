@@ -117,29 +117,26 @@ export const listProductTypes = async (): Promise<
     .catch(() => [])
 }
 
-export const listProductTypeIdsForCategory = async (
+export const filterProductTypesForCategory = async (
+  types: { id: string; value: string }[],
   categoryId: string,
   countryCode: string
-): Promise<string[]> => {
-  const result = await listProducts({
-    pageParam: 1,
-    queryParams: {
-      category_id: [categoryId],
-      fields: "type_id",
-      limit: 500,
-    },
-    countryCode,
-  }).catch(() => null)
-
-  if (!result) return []
-
-  return [
-    ...new Set(
-      result.response.products
-        .map((p) => p.type_id)
-        .filter(Boolean) as string[]
-    ),
-  ]
+): Promise<{ id: string; value: string }[]> => {
+  const results = await Promise.all(
+    types.map(async (type) => {
+      const result = await listProducts({
+        pageParam: 1,
+        queryParams: {
+          category_id: [categoryId],
+          type_id: [type.id],
+          limit: 1,
+        },
+        countryCode,
+      }).catch(() => null)
+      return result && result.response.count > 0 ? type : null
+    })
+  )
+  return results.filter((t): t is { id: string; value: string } => t !== null)
 }
 
 export const getProductSeoByHandle = async (handle: string) => {
