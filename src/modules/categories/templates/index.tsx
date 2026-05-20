@@ -29,7 +29,7 @@ export default async function CategoryTemplate({
 
   const [productTypes, categoryTypeIds] = await Promise.all([
     listProductTypes(),
-    listProductTypeIdsForCategory(category.id),
+    listProductTypeIdsForCategory(category.id, countryCode),
   ])
   const filteredProductTypes = productTypes.filter((t) =>
     categoryTypeIds.includes(t.id)
