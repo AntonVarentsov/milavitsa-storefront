@@ -72,6 +72,14 @@ export default async function PaginatedProducts({
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
+  if (q && products.length === 0) {
+    return (
+      <p className="py-12 text-center text-ink-50 text-sm">
+        По запросу «{q}» ничего не найдено
+      </p>
+    )
+  }
+
   return (
     <>
       <ul
