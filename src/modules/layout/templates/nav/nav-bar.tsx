@@ -9,6 +9,7 @@ import { StoreRegion, StoreCollection } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import SideMenu from "@modules/layout/components/side-menu"
 import NotificationBar from "@modules/layout/components/notification-bar"
+import SearchModal from "@modules/search/components/search-modal"
 
 interface NavBarProps {
   regions: StoreRegion[]
@@ -19,6 +20,7 @@ interface NavBarProps {
 export default function NavBar({ regions, cartSlot, collections = [] }: NavBarProps) {
   const [scrolled, setScrolled] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const pathname = usePathname()
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -96,6 +98,7 @@ export default function NavBar({ regions, cartSlot, collections = [] }: NavBarPr
             <button
               className="w-9 h-9 hidden md:flex items-center justify-center hover:text-brand-red transition-colors"
               aria-label="Поиск"
+              onClick={() => setIsSearchOpen(true)}
             >
               <Search size={20} strokeWidth={1.5} />
             </button>
@@ -121,6 +124,11 @@ export default function NavBar({ regions, cartSlot, collections = [] }: NavBarPr
           </div>
         </nav>
       </header>
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </div>
   )
 }
